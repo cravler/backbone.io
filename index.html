@@ -1,0 +1,255 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Backbone.IO by scttnlsn</title>
+    
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Backbone.IO</h1>
+        <p>Backbone.js sync via Socket.IO</p>
+        <p class="view"><a href="https://github.com/scttnlsn/backbone.io">View the Project on GitHub <small>scttnlsn/backbone.io</small></a></p>
+        <ul>
+          <li><a href="https://github.com/scttnlsn/backbone.io/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/scttnlsn/backbone.io/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/scttnlsn/backbone.io">Fork On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p>Backbone.IO provides a backend-agnostic Backbone.js sync override and server notifications via Socket.IO.</p>
+
+<h2>Install</h2>
+
+<pre><code>npm install backbone.io
+</code></pre>
+
+<h2>Usage</h2>
+
+<p>On the server:</p>
+
+<div class="highlight">
+<pre><span class="kd">var</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'http'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">backboneio</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'backbone.io'</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">();</span>    
+<span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="mi">3000</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">backend</span> <span class="o">=</span> <span class="nx">backboneio</span><span class="p">.</span><span class="nx">createBackend</span><span class="p">();</span>
+<span class="nx">backend</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">backboneio</span><span class="p">.</span><span class="nx">middleware</span><span class="p">.</span><span class="nx">memoryStore</span><span class="p">());</span>
+
+<span class="nx">backboneio</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="p">{</span> <span class="nx">mybackend</span><span class="o">:</span> <span class="nx">backend</span> <span class="p">});</span>
+</pre>
+</div>
+
+
+<p>On the client:</p>
+
+<div class="highlight">
+<pre><span class="c">&lt;!-- Include Underscore, Backbone --&gt;</span>
+
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"/socket.io/socket.io.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"/socket.io/backbone.io.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+
+<span class="nt">&lt;script&gt;</span>
+    <span class="kd">var</span> <span class="nx">MyCollection</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+        <span class="nx">backend</span><span class="o">:</span> <span class="s1">'mybackend'</span>
+    <span class="p">});</span>
+<span class="nt">&lt;/script&gt;</span>
+</pre>
+</div>
+
+
+<p>Models in <code>MyCollection</code> will now be synced to <code>mybackend</code>.</p>
+
+<h2>Events</h2>
+
+<p>When a model is synced with a particular backend, the backend will trigger events
+on collections (across multiple clients) that share the backend.  For example, we
+could keep collections synced in realtime with the following event bindings:</p>
+
+<div class="highlight">
+<pre><span class="kd">var</span> <span class="nx">MyCollection</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="nx">backend</span><span class="o">:</span> <span class="s1">'mybackend'</span><span class="p">,</span>
+
+    <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="s1">'backend:create'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+        <span class="p">});</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="s1">'backend:update'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">id</span><span class="p">).</span><span class="nx">set</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+        <span class="p">});</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="s1">'backend:delete'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+<span class="p">});</span>
+</pre>
+</div>
+
+
+<p>Or use the provided shortcut:</p>
+
+<div class="highlight">
+<pre><span class="nx">backend</span><span class="o">:</span> <span class="s1">'mybackend'</span><span class="p">,</span>
+
+<span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">bindBackend</span><span class="p">();</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+
+<p>In addition to <code>backend:create</code>, <code>backend:read</code>, <code>backend:update</code>, and <code>backend:delete</code>
+events, a generic <code>backend</code> event is also triggered when a model is synced.</p>
+
+<div class="highlight">
+<pre><span class="k">this</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="s1">'backend'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">method</span><span class="p">,</span> <span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Method will be one of create, read, update, or delete</span>
+<span class="p">});</span>
+</pre>
+</div>
+
+
+<p>The event prefix <code>backend</code> is used by default but this can be customized by setting the
+event name on the server.</p>
+
+<div class="highlight">
+<pre><span class="nx">backboneio</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="p">{</span> <span class="nx">mybackend</span><span class="o">:</span> <span class="nx">backend</span> <span class="p">},</span> <span class="p">{</span> <span class="nx">event</span><span class="o">:</span> <span class="s1">'myevent'</span> <span class="p">});</span>
+</pre>
+</div>
+
+
+<h2>Backends and Middleware</h2>
+
+<p>Backends are stacks of composable middleware (inspired by Connect) that are responsible
+for handling sync requests and responding appropriately.  Each middleware is a function
+that accepts request and response objects (and optionally a function that can be called
+to continue down the stack).  A middleware will generally either return a result by
+calling <code>end</code> on the response object or pass control downward.  For example, let's add a
+logger middleware to our backend:</p>
+
+<div class="highlight">
+<pre><span class="kd">var</span> <span class="nx">backend</span> <span class="o">=</span> <span class="nx">backboneio</span><span class="p">.</span><span class="nx">createBackend</span><span class="p">();</span>
+
+<span class="nx">backend</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">backend</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span><span class="p">);</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">model</span><span class="p">));</span>
+    <span class="nx">next</span><span class="p">();</span>
+<span class="p">});</span>
+
+<span class="nx">backend</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">backboneio</span><span class="p">.</span><span class="nx">middleware</span><span class="p">.</span><span class="nx">memoryStore</span><span class="p">());</span>
+</pre>
+</div>
+
+
+<p>A request object will contain the following components (in addition to those set by
+various middleware):</p>
+
+<ul>
+<li>
+<code>method</code>: the sync method (<code>create</code>, <code>read</code>, <code>update</code>, or <code>delete</code>)</li>
+<li>
+<code>model</code>: the model object to by synced</li>
+<li>
+<code>options</code>: any options set by the client (except success and error callbacks)</li>
+<li>
+<code>backend</code>: name of the backend responsible for handling the request</li>
+<li>
+<code>socket</code>: the client socket that initiated the request</li>
+</ul><p>Middleware can also be applied to only particular types of requests by passing the desired
+contexts to <code>use</code>:</p>
+
+<div class="highlight">
+<pre><span class="nx">backend</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'create'</span><span class="p">,</span> <span class="s1">'update'</span><span class="p">,</span> <span class="s1">'delete'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isAuthorized</span><span class="p">(</span><span class="nx">req</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">next</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">next</span><span class="p">(</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">'Unauthorized'</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre>
+</div>
+
+
+<p>Or alternatively by using one of the four helper methods (<code>create</code>, <code>read</code>, <code>update</code>, <code>delete</code>):</p>
+
+<div class="highlight">
+<pre><span class="nx">backend</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">model</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">req</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">mymodels</span><span class="p">[</span><span class="nx">req</span><span class="p">.</span><span class="nx">model</span><span class="p">.</span><span class="nx">id</span><span class="p">]);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">req</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">mymodels</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+</pre>
+</div>
+
+
+<p>If the bottom of the middleware stack is reached before a result is returned then the requested
+model is returned by default: <code>res.end(req.model)</code>.  Look in the <code>middleware</code> directory for more
+examples.</p>
+
+<p>Clients are automatically notified of events triggered by other clients, however, there may
+be cases where other server-side code needs to make updates to a model outside of a backend
+handler.  In such a case, one can notify clients by emitting events directly on the backend.
+For example:</p>
+
+<div class="highlight">
+<pre><span class="kd">var</span> <span class="nx">backend</span> <span class="o">=</span> <span class="nx">backboneio</span><span class="p">.</span><span class="nx">createBackend</span><span class="p">();</span>
+<span class="nx">backend</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">backboneio</span><span class="p">.</span><span class="nx">middleware</span><span class="p">.</span><span class="nx">memoryStore</span><span class="p">());</span>
+
+<span class="c1">// Clients will receive 'backend:create', 'backend:update',</span>
+<span class="c1">// and 'backend:delete' events respectively.</span>
+<span class="nx">backend</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'created'</span><span class="p">,</span> <span class="p">{</span> <span class="nx">id</span><span class="o">:</span> <span class="s1">'myid'</span><span class="p">,</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">'bar'</span> <span class="p">});</span>
+<span class="nx">backend</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'updated'</span><span class="p">,</span> <span class="p">{</span> <span class="nx">id</span><span class="o">:</span> <span class="s1">'myid'</span><span class="p">,</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">'baz'</span> <span class="p">});</span>
+<span class="nx">backend</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">'deleted'</span><span class="p">,</span> <span class="p">{</span> <span class="nx">id</span><span class="o">:</span> <span class="s1">'myid'</span> <span class="p">});</span>
+</pre>
+</div>
+
+
+<h2>Channels</h2>
+
+<p>To synchronize models between a subset of all clients sharing a single backend, you can
+specify a channel.</p>
+
+<div class="highlight">
+<pre><span class="kd">var</span> <span class="nx">MyCollection</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="nx">backend</span><span class="o">:</span> <span class="p">{</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">'mybackend'</span><span class="p">,</span> <span class="nx">channel</span><span class="o">:</span> <span class="s1">'mychannel'</span> <span class="p">}</span>
+
+<span class="p">});</span>
+</pre>
+</div>
+
+
+<p>Only clients sharing the same channel will receive updates from each other.  The channel
+associated with a given request is available from any middleware in <code>req.channel</code>.</p>
+
+<h2>Customizing</h2>
+
+<p>In addition to middleware, the behavior of Backbone.IO can be customized via standard Socket.IO
+mechanisms.  The object returned from the call to <code>listen</code> is the Socket.IO object and can be
+manipulated further.  See <a href="http://socket.io">http://socket.io</a> for more details.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/scttnlsn">scttnlsn</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+  </body>
+</html>
