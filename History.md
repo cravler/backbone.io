@@ -1,3 +1,16 @@
+0.3.3 / 2013-01-18
+==================
+
+* Added IE compatibility
+* Added Backbone 0.9.10 compatibility
+
+0.3.2 / 2012-10-24
+==================
+
+* Fixed middleware error handling bug
+* Changed session middleware to use `load` instead of `get`
+* Fixed sync override to return original jqXHR object
+
 0.3.1 / 2012-07-29
 ==================
 
